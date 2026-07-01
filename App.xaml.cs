@@ -20,6 +20,7 @@ public partial class App : Application
 
         var services = new ServiceCollection();
         services.AddSingleton<WebViewEnvironmentService>();
+        services.AddSingleton<TabLifecycleService>();
         services.AddSingleton<MainViewModel>();
         _services = services.BuildServiceProvider();
 

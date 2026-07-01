@@ -5,6 +5,7 @@
                  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
                  xmlns:vm="clr-namespace:WebBrowser.ViewModels"
+                 xmlns:views="clr-namespace:WebBrowser.Views"
                  mc:Ignorable="d"
                  Title="WebBrowser"
                  Height="760" Width="1280"
@@ -17,23 +18,35 @@
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     </ui:FluentWindow.Resources>
 
+    <ui:FluentWindow.InputBindings>
+        <KeyBinding Modifiers="Control" Key="T" Command="{Binding NewTabCommand}" />
+        <KeyBinding Modifiers="Control" Key="W"
+                    Command="{Binding CloseTabCommand}"
+                    CommandParameter="{Binding ActiveTab}" />
+    </ui:FluentWindow.InputBindings>
+
     <Grid>
         <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Title bar: drag region + system caption (min/max/close) buttons -->
-        <ui:TitleBar x:Name="TitleBar" Grid.Row="0" Title="WebBrowser" />
+        <!-- Title bar: drag region + system caption buttons (title text hidden; tab strip is the top element). -->
+        <ui:TitleBar x:Name="TitleBar" Grid.Row="0" Title="" />
 
-        <!-- Toolbar: navigation buttons + address bar -->
-        <Grid Grid.Row="1" Margin="10,6,10,10">
+        <!-- Custom tab strip (ItemsControl-based, never a stock TabControl). -->
+        <views:TabStripView Grid.Row="1" Margin="6,0" />
+
+        <!-- Toolbar: navigation buttons + address bar + process-count telemetry. -->
+        <Grid Grid.Row="2" Margin="10,4,10,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
             <ui:Button Grid.Column="0"
@@ -41,19 +54,22 @@
                        Icon="{ui:SymbolIcon ArrowLeft24}"
                        Command="{Binding ActiveTab.GoBackCommand}"
                        ToolTip="Back"
-                       Margin="0,0,4,0" />
+                       Margin="0,0,4,0"
+                       Focusable="False" />
             <ui:Button Grid.Column="1"
                        Appearance="Transparent"
                        Icon="{ui:SymbolIcon ArrowRight24}"
                        Command="{Binding ActiveTab.GoForwardCommand}"
                        ToolTip="Forward"
-                       Margin="0,0,4,0" />
+                       Margin="0,0,4,0"
+                       Focusable="False" />
             <ui:Button Grid.Column="2"
                        Appearance="Transparent"
                        Icon="{ui:SymbolIcon ArrowClockwise24}"
                        Command="{Binding ActiveTab.ReloadCommand}"
                        ToolTip="Reload"
-                       Margin="0,0,10,0" />
+                       Margin="0,0,10,0"
+                       Focusable="False" />
 
             <ui:TextBox x:Name="AddressBox"
                         Grid.Column="3"
@@ -61,15 +77,23 @@
                         Icon="{ui:SymbolIcon Search24}"
                         Text="{Binding ActiveTab.Address, Mode=OneWay, TargetNullValue=''}"
                         KeyDown="AddressBox_KeyDown" />
+
+            <!-- Debug aid: live WebView2 process count (drops as tabs close — teardown verification). -->
+            <TextBlock Grid.Column="4"
+                       Text="{Binding WebViewProcessCount, StringFormat='wv2: {0}'}"
+                       VerticalAlignment="Center"
+                       Margin="10,0,2,0"
+                       Opacity="0.5"
+                       FontSize="11" />
         </Grid>
 
         <!--
             Tab content region. Every tab's WebView2 control is overlaid in a single Grid and kept
             parented for its whole lifetime; only the active tab is visible. We deliberately do NOT
             use a stock TabControl here — its content recycling would unparent/reparent the WebView2,
-            destroying its host HWND. (M2 adds the visible tab strip above this region.)
+            destroying its host HWND.
         -->
-        <ItemsControl Grid.Row="2" ItemsSource="{Binding Tabs}" Focusable="False">
+        <ItemsControl Grid.Row="3" ItemsSource="{Binding Tabs}" Focusable="False">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <Grid />
