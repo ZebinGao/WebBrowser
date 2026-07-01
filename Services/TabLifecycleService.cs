@@ -14,6 +14,7 @@ namespace WebBrowser.Services;
 public sealed class TabLifecycleService
 {
     private readonly WebViewEnvironmentService _environmentService;
+    private readonly DownloadManagerService _downloadManager;
     private bool _isShuttingDown;
 
     public ObservableCollection<TabViewModel> Tabs { get; } = new();
@@ -22,16 +23,17 @@ public sealed class TabLifecycleService
 
     public event EventHandler<TabViewModel?>? ActiveTabChanged;
 
-    public TabLifecycleService(WebViewEnvironmentService environmentService)
+    public TabLifecycleService(WebViewEnvironmentService environmentService, DownloadManagerService downloadManager)
     {
         _environmentService = environmentService;
+        _downloadManager = downloadManager;
         _environmentService.EnvironmentLost += OnEnvironmentLost;
     }
 
     /// <summary>Creates a tab, activates it, initializes its WebView2 against the shared environment, then navigates.</summary>
     public async Task<TabViewModel> OpenTabAsync(string? url = null)
     {
-        var tab = new TabViewModel();
+        var tab = new TabViewModel(_downloadManager);
         Tabs.Add(tab);
         SetActive(tab);
 

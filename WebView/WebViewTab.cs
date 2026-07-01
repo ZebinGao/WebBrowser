@@ -2,6 +2,7 @@ using System.Windows;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
 using WebBrowser.Helpers;
+using WebBrowser.Services;
 using WebBrowser.ViewModels;
 
 namespace WebBrowser.WebView;
@@ -15,6 +16,7 @@ namespace WebBrowser.WebView;
 public sealed class WebViewTab
 {
     private readonly TabViewModel _vm;
+    private readonly DownloadManagerService _downloadManager;
     private bool _initialized;
     private bool _tornDown;
 
@@ -26,9 +28,10 @@ public sealed class WebViewTab
     public bool IsInitialized => _initialized;
     public bool IsSuspended { get; private set; }
 
-    public WebViewTab(TabViewModel vm)
+    public WebViewTab(TabViewModel vm, DownloadManagerService downloadManager)
     {
         _vm = vm;
+        _downloadManager = downloadManager;
         Control = new WebView2
         {
             HorizontalAlignment = HorizontalAlignment.Stretch,
@@ -82,6 +85,8 @@ public sealed class WebViewTab
         Core.SourceChanged += OnSourceChanged;
         Core.HistoryChanged += OnHistoryChanged;
         Core.DocumentTitleChanged += OnDocumentTitleChanged;
+
+        _downloadManager.Register(Core);
     }
 
     private void UnhookEvents()
@@ -94,6 +99,8 @@ public sealed class WebViewTab
         Core.SourceChanged -= OnSourceChanged;
         Core.HistoryChanged -= OnHistoryChanged;
         Core.DocumentTitleChanged -= OnDocumentTitleChanged;
+
+        _downloadManager.Unregister(Core);
     }
 
     // WPF WebView2 raises these on the UI thread, so no dispatcher marshaling needed.

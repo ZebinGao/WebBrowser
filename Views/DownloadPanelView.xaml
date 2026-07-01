@@ -1,0 +1,116 @@
+<UserControl x:Class="WebBrowser.Views.DownloadPanelView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:vm="clr-namespace:WebBrowser.ViewModels"
+             mc:Ignorable="d"
+             d:DesignHeight="320" d:DesignWidth="380">
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
+    </UserControl.Resources>
+
+    <Border Background="#FF202020" BorderBrush="#33FFFFFF" BorderThickness="1" CornerRadius="8" Padding="0">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0"
+                       Text="Downloads"
+                       FontWeight="SemiBold"
+                       FontSize="13"
+                       Margin="14,10,14,6" />
+
+            <ScrollViewer Grid.Row="1"
+                          VerticalScrollBarVisibility="Auto"
+                          MaxHeight="440">
+                <ItemsControl ItemsSource="{Binding Downloads}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:DownloadItemViewModel}">
+                            <Border Padding="14,8" BorderThickness="0,1,0,0" BorderBrush="#22FFFFFF">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Row 0: filename + status reason -->
+                                    <StackPanel Grid.Row="0" Orientation="Horizontal">
+                                        <TextBlock Text="{Binding FileName}"
+                                                   FontWeight="SemiBold"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   MaxWidth="240"
+                                                   VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding InterruptReasonText}"
+                                                   Margin="8,0,0,0"
+                                                   Opacity="0.55"
+                                                   FontSize="11"
+                                                   VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" />
+                                    </StackPanel>
+
+                                    <!-- Row 1: progress bar + speed -->
+                                    <DockPanel Grid.Row="1" Margin="0,6,0,0">
+                                        <TextBlock DockPanel.Dock="Right"
+                                                   Text="{Binding SpeedText}"
+                                                   Opacity="0.6"
+                                                   FontSize="11"
+                                                   Margin="8,0,0,0"
+                                                   VerticalAlignment="Center" />
+                                        <ProgressBar Height="6"
+                                                     Minimum="0" Maximum="1"
+                                                     Value="{Binding Progress, Mode=OneWay}"
+                                                     IsIndeterminate="{Binding IsIndeterminate}" />
+                                    </DockPanel>
+
+                                    <!-- Row 2: actions -->
+                                    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,6,0,0">
+                                        <ui:Button Appearance="Transparent"
+                                                   Icon="{ui:SymbolIcon Pause24}"
+                                                   Command="{Binding PauseCommand}"
+                                                   Visibility="{Binding CanPause, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                   Width="30" Height="30" Padding="0"
+                                                   ToolTip="Pause" />
+                                        <ui:Button Appearance="Transparent"
+                                                   Icon="{ui:SymbolIcon Play24}"
+                                                   Command="{Binding ResumeCommand}"
+                                                   Visibility="{Binding CanResume, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                   Width="30" Height="30" Padding="0"
+                                                   ToolTip="Resume" />
+                                        <ui:Button Appearance="Transparent"
+                                                   Icon="{ui:SymbolIcon Dismiss24}"
+                                                   Command="{Binding CancelCommand}"
+                                                   Visibility="{Binding CanCancel, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                   Width="30" Height="30" Padding="0"
+                                                   ToolTip="Cancel" />
+                                        <ui:Button Appearance="Transparent"
+                                                   Icon="{ui:SymbolIcon ArrowSync24}"
+                                                   Command="{Binding RetryCommand}"
+                                                   Visibility="{Binding CanRetry, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                   Width="30" Height="30" Padding="0"
+                                                   ToolTip="Retry" />
+                                        <ui:Button Appearance="Transparent"
+                                                   Icon="{ui:SymbolIcon Open24}"
+                                                   Command="{Binding OpenCommand}"
+                                                   Visibility="{Binding CanOpen, Converter={StaticResource BoolToVisibilityConverter}}"
+                                                   Width="30" Height="30" Padding="0"
+                                                   ToolTip="Open file" />
+                                        <ui:Button Appearance="Transparent"
+                                                   Icon="{ui:SymbolIcon FolderOpen24}"
+                                                   Command="{Binding RevealCommand}"
+                                                   Width="30" Height="30" Padding="0"
+                                                   ToolTip="Show in folder" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+    </Border>
+</UserControl>

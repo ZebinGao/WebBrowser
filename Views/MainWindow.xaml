@@ -39,13 +39,14 @@
         <!-- Custom tab strip (ItemsControl-based, never a stock TabControl). -->
         <views:TabStripView Grid.Row="1" Margin="6,0" />
 
-        <!-- Toolbar: navigation buttons + address bar + process-count telemetry. -->
+        <!-- Toolbar: navigation buttons + address bar + downloads + process-count telemetry. -->
         <Grid Grid.Row="2" Margin="10,4,10,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
@@ -73,13 +74,48 @@
 
             <ui:TextBox x:Name="AddressBox"
                         Grid.Column="3"
+                        AutomationProperties.Name="Address bar"
                         PlaceholderText="Search or enter web address"
                         Icon="{ui:SymbolIcon Search24}"
                         Text="{Binding ActiveTab.Address, Mode=OneWay, TargetNullValue=''}"
                         KeyDown="AddressBox_KeyDown" />
 
+            <!-- Downloads button with an active-count badge overlay. -->
+            <Grid Grid.Column="4" Margin="6,0,2,0" HorizontalAlignment="Right">
+                <ui:Button x:Name="DownloadsButton"
+                           Appearance="Transparent"
+                           Icon="{ui:SymbolIcon ArrowDownload24}"
+                           AutomationProperties.Name="Downloads"
+                           Command="{Binding ToggleDownloadsCommand}"
+                           ToolTip="Downloads"
+                           Focusable="False" />
+                <Border CornerRadius="8"
+                        Background="#FF0078D4"
+                        MinWidth="16" Height="16"
+                        HorizontalAlignment="Right" VerticalAlignment="Top"
+                        Margin="0,-3,-3,0"
+                        Padding="4,0">
+                    <Border.Style>
+                        <Style TargetType="Border">
+                            <Setter Property="Visibility" Value="Visible" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ActiveDownloadCount}" Value="0">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Border.Style>
+                    <TextBlock Text="{Binding ActiveDownloadCount}"
+                               FontSize="10"
+                               Foreground="White"
+                               FontWeight="SemiBold"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                </Border>
+            </Grid>
+
             <!-- Debug aid: live WebView2 process count (drops as tabs close — teardown verification). -->
-            <TextBlock Grid.Column="4"
+            <TextBlock Grid.Column="5"
                        Text="{Binding WebViewProcessCount, StringFormat='wv2: {0}'}"
                        VerticalAlignment="Center"
                        Margin="10,0,2,0"
@@ -106,5 +142,16 @@
                 </DataTemplate>
             </ItemsControl.ItemTemplate>
         </ItemsControl>
+
+        <!-- Downloads flyout, toggled by the toolbar button. -->
+        <Popup IsOpen="{Binding IsDownloadsOpen}"
+               PlacementTarget="{Binding ElementName=DownloadsButton}"
+               Placement="Bottom"
+               HorizontalOffset="-338"
+               VerticalOffset="2"
+               AllowsTransparency="True"
+               PopupAnimation="Fade">
+            <views:DownloadPanelView />
+        </Popup>
     </Grid>
 </ui:FluentWindow>

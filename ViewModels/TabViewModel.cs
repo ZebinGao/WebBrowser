@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Microsoft.Web.WebView2.Core;
 using WebBrowser.Models;
+using WebBrowser.Services;
 using WebBrowser.WebView;
 
 namespace WebBrowser.ViewModels;
@@ -23,9 +24,9 @@ public sealed partial class TabViewModel : ObservableObject
     [ObservableProperty] private bool _isActive;
     [ObservableProperty] private TabState _state = TabState.Loaded;
 
-    public TabViewModel()
+    public TabViewModel(DownloadManagerService downloadManager)
     {
-        _webView = new WebViewTab(this);
+        _webView = new WebViewTab(this, downloadManager);
     }
 
     public Task InitializeAsync(CoreWebView2Environment environment)
