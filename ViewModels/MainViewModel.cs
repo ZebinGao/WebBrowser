@@ -5,6 +5,8 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using WebBrowser.Models;
 using WebBrowser.Services;
+using Wpf.Ui.Appearance;
+using Wpf.Ui.Controls;
 
 namespace WebBrowser.ViewModels;
 
@@ -36,6 +38,10 @@ public sealed partial class MainViewModel : ObservableObject
     /// <summary>True while the downloads flyout is open.</summary>
     [ObservableProperty]
     private bool _isDownloadsOpen;
+
+    /// <summary>Current dark/light theme — drives the toggle button's icon and applied theme.</summary>
+    [ObservableProperty]
+    private bool _isDarkTheme = true;
 
     /// <summary>Number of downloads currently in progress or paused — drives the toolbar badge.</summary>
     public int ActiveDownloadCount
@@ -81,6 +87,16 @@ public sealed partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     private void ToggleDownloads() => IsDownloadsOpen = !IsDownloadsOpen;
+
+    [RelayCommand]
+    private void ToggleTheme()
+    {
+        IsDarkTheme = !IsDarkTheme;
+        ApplicationThemeManager.Apply(
+            IsDarkTheme ? ApplicationTheme.Dark : ApplicationTheme.Light,
+            WindowBackdropType.Mica,
+            true);
+    }
 
     private void OnDownloadsCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {

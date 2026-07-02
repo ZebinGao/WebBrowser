@@ -29,23 +29,24 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Title bar: drag region + system caption buttons (title text hidden; tab strip is the top element). -->
-        <ui:TitleBar x:Name="TitleBar" Grid.Row="0" Title="" />
-
-        <!-- Custom tab strip (ItemsControl-based, never a stock TabControl). -->
-        <views:TabStripView Grid.Row="1" Margin="6,0" />
+        <!-- Title bar hosts the tab strip on the left; system caption buttons render on the right. -->
+        <ui:TitleBar x:Name="TitleBar" Grid.Row="0" Title="">
+            <ui:TitleBar.Header>
+                <views:TabStripView />
+            </ui:TitleBar.Header>
+        </ui:TitleBar>
 
         <!-- Toolbar: navigation buttons + address bar + downloads + process-count telemetry. -->
-        <Grid Grid.Row="2" Margin="10,4,10,8">
+        <Grid Grid.Row="1" Margin="10,4,10,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
@@ -114,8 +115,45 @@
                 </Border>
             </Grid>
 
+            <!-- Theme toggle: two overlaid buttons (moon when dark, sun when light); only one is visible. -->
+            <Grid Grid.Column="5" Margin="4,0,2,0">
+                <ui:Button Appearance="Transparent"
+                           Focusable="False"
+                           Icon="{ui:SymbolIcon WeatherMoon24}"
+                           AutomationProperties.Name="Switch to light theme"
+                           ToolTip="Switch to light theme"
+                           Command="{Binding ToggleThemeCommand}">
+                    <ui:Button.Style>
+                        <Style TargetType="ui:Button">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsDarkTheme}" Value="False">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ui:Button.Style>
+                </ui:Button>
+                <ui:Button Appearance="Transparent"
+                           Focusable="False"
+                           Icon="{ui:SymbolIcon WeatherSunny24}"
+                           AutomationProperties.Name="Switch to dark theme"
+                           ToolTip="Switch to dark theme"
+                           Command="{Binding ToggleThemeCommand}">
+                    <ui:Button.Style>
+                        <Style TargetType="ui:Button">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsDarkTheme}" Value="False">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ui:Button.Style>
+                </ui:Button>
+            </Grid>
+
             <!-- Debug aid: live WebView2 process count (drops as tabs close — teardown verification). -->
-            <TextBlock Grid.Column="5"
+            <TextBlock Grid.Column="6"
                        Text="{Binding WebViewProcessCount, StringFormat='wv2: {0}'}"
                        VerticalAlignment="Center"
                        Margin="10,0,2,0"
@@ -129,7 +167,7 @@
             use a stock TabControl here — its content recycling would unparent/reparent the WebView2,
             destroying its host HWND.
         -->
-        <ItemsControl Grid.Row="3" ItemsSource="{Binding Tabs}" Focusable="False">
+        <ItemsControl Grid.Row="2" ItemsSource="{Binding Tabs}" Focusable="False">
             <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                     <Grid />

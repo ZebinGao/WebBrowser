@@ -1,4 +1,6 @@
 using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
 using WebBrowser.Helpers;
@@ -19,6 +21,9 @@ public sealed class WebViewTab
     private readonly DownloadManagerService _downloadManager;
     private bool _initialized;
     private bool _tornDown;
+
+    /// <summary>Per-host favicon cache so we don't re-fetch/decode on every intra-site navigation.</summary>
+    private static readonly Dictionary<string, ImageSource> FaviconCache = new();
 
     public WebView2 Control { get; }
 
@@ -85,6 +90,7 @@ public sealed class WebViewTab
         Core.SourceChanged += OnSourceChanged;
         Core.HistoryChanged += OnHistoryChanged;
         Core.DocumentTitleChanged += OnDocumentTitleChanged;
+        Core.FaviconChanged += OnFaviconChanged;
 
         _downloadManager.Register(Core);
     }
@@ -99,6 +105,7 @@ public sealed class WebViewTab
         Core.SourceChanged -= OnSourceChanged;
         Core.HistoryChanged -= OnHistoryChanged;
         Core.DocumentTitleChanged -= OnDocumentTitleChanged;
+        Core.FaviconChanged -= OnFaviconChanged;
 
         _downloadManager.Unregister(Core);
     }
@@ -121,6 +128,35 @@ public sealed class WebViewTab
 
     private void OnDocumentTitleChanged(object? sender, object e)
         => _vm.Title = string.IsNullOrWhiteSpace(Core.DocumentTitle) ? Core.Source : Core.DocumentTitle;
+
+    private async void OnFaviconChanged(object? sender, object e)
+    {
+        try
+        {
+            string host = Uri.TryCreate(Core.Source, UriKind.Absolute, out var uri) ? uri.Host : Core.Source;
+
+            if (FaviconCache.TryGetValue(host, out var cached))
+            {
+                _vm.Favicon = cached;
+                return;
+            }
+
+            using var stream = await Core.GetFaviconAsync(CoreWebView2FaviconImageFormat.Png);
+            var bitmap = new BitmapImage();
+            bitmap.BeginInit();
+            bitmap.CacheOption = BitmapCacheOption.OnLoad; // detach from the stream so we can dispose it
+            bitmap.StreamSource = stream;
+            bitmap.EndInit();
+            bitmap.Freeze(); // cross-thread safe
+
+            FaviconCache[host] = bitmap;
+            _vm.Favicon = bitmap;
+        }
+        catch
+        {
+            // No favicon available or decode failed — leave the default (null) icon.
+        }
+    }
 
     public void Navigate(string? input)
     {

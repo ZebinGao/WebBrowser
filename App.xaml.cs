@@ -3,6 +3,8 @@ using Microsoft.Extensions.DependencyInjection;
 using WebBrowser.Services;
 using WebBrowser.ViewModels;
 using WebBrowser.Views;
+using Wpf.Ui.Appearance;
+using Wpf.Ui.Controls;
 
 namespace WebBrowser;
 
@@ -29,8 +31,31 @@ public partial class App : Application
         var mainWindow = new MainWindow { DataContext = mainViewModel };
         mainWindow.Show();
 
+        // Match the OS dark/light theme so Mica and controls blend with the system.
+        bool systemDark = !IsSystemLightTheme();
+        ApplicationThemeManager.Apply(
+            systemDark ? ApplicationTheme.Dark : ApplicationTheme.Light,
+            WindowBackdropType.Mica,
+            true);
+        mainViewModel.IsDarkTheme = systemDark;
+
         // Open the initial tab once the window is on screen (fire-and-forget, errors surfaced).
         _ = ShowInitialTabAsync(mainViewModel);
+    }
+
+    /// <summary>Reads the user's "AppsUseLightTheme" registry value (0 = dark, 1 = light).</summary>
+    private static bool IsSystemLightTheme()
+    {
+        try
+        {
+            using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+                @"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize");
+            return key?.GetValue("AppsUseLightTheme") is int value && value == 1;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static async Task ShowInitialTabAsync(MainViewModel mainViewModel)
@@ -41,11 +66,11 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            MessageBox.Show(
+            System.Windows.MessageBox.Show(
                 "Failed to initialize the browser engine:\n\n" + ex.Message,
                 "WebBrowser",
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Error);
         }
     }
 
