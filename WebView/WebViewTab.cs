@@ -20,6 +20,7 @@ public sealed class WebViewTab
 {
     private readonly TabViewModel _vm;
     private readonly DownloadManagerService _downloadManager;
+    private readonly HistoryService _history;
     private bool _initialized;
     private bool _tornDown;
 
@@ -34,10 +35,11 @@ public sealed class WebViewTab
     public bool IsInitialized => _initialized;
     public bool IsSuspended { get; private set; }
 
-    public WebViewTab(TabViewModel vm, DownloadManagerService downloadManager)
+    public WebViewTab(TabViewModel vm, DownloadManagerService downloadManager, HistoryService history)
     {
         _vm = vm;
         _downloadManager = downloadManager;
+        _history = history;
         Control = new WebView2
         {
             HorizontalAlignment = HorizontalAlignment.Stretch,
@@ -116,7 +118,19 @@ public sealed class WebViewTab
         => _vm.IsLoading = true;
 
     private void OnNavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
-        => _vm.IsLoading = false;
+    {
+        _vm.IsLoading = false;
+
+        // Record successful http(s) navigations to history. Skips about:/data:/blob: and failed loads;
+        // Core.Source is the WebView2-normalized URL and makes a stable dedup key.
+        if (e.IsSuccess
+            && Uri.TryCreate(Core.Source, UriKind.Absolute, out var uri)
+            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+        {
+            var title = string.IsNullOrWhiteSpace(Core.DocumentTitle) ? Core.Source : Core.DocumentTitle;
+            _history.Record(Core.Source, title);
+        }
+    }
 
     private void OnSourceChanged(object? sender, CoreWebView2SourceChangedEventArgs e)
         => _vm.Address = Core.Source;

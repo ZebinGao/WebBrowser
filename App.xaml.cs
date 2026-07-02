@@ -23,6 +23,8 @@ public partial class App : Application
         var services = new ServiceCollection();
         services.AddSingleton<WebViewEnvironmentService>();
         services.AddSingleton<DownloadManagerService>();
+        services.AddSingleton<HistoryService>();
+        services.AddSingleton<BookmarksService>();
         services.AddSingleton<TabLifecycleService>();
         services.AddSingleton<MainViewModel>();
         _services = services.BuildServiceProvider();
@@ -77,7 +79,12 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         if (_services is not null)
+        {
+            // Flush any pending history/bookmark writes before the process exits.
+            _services.GetRequiredService<HistoryService>().Dispose();
+            _services.GetRequiredService<BookmarksService>().Dispose();
             _services.GetRequiredService<WebViewEnvironmentService>().Dispose();
+        }
 
         base.OnExit(e);
     }

@@ -23,6 +23,9 @@
         <KeyBinding Modifiers="Control" Key="W"
                     Command="{Binding CloseTabCommand}"
                     CommandParameter="{Binding ActiveTab}" />
+            <KeyBinding Modifiers="Control" Key="H" Command="{Binding ToggleHistoryCommand}" />
+            <KeyBinding Modifiers="Control" Key="D" Command="{Binding ToggleCurrentBookmarkCommand}" />
+            <KeyBinding Modifiers="Control+Shift" Key="O" Command="{Binding ToggleBookmarksCommand}" />
     </ui:FluentWindow.InputBindings>
 
     <Grid>
@@ -46,6 +49,8 @@
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+                <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="Auto" />
@@ -115,8 +120,56 @@
                 </Border>
             </Grid>
 
+            <!-- Bookmark this page: outline star when unbookmarked, filled star when bookmarked. -->
+            <Grid x:Name="BookmarkButton" Grid.Column="5" Margin="4,0,2,0">
+                <ui:Button Appearance="Transparent"
+                           Focusable="False"
+                           Icon="{ui:SymbolIcon Star24}"
+                           AutomationProperties.Name="Bookmarks"
+                           ToolTip="Bookmarks (Ctrl+Shift+O)"
+                           Command="{Binding ToggleBookmarksCommand}">
+                    <ui:Button.Style>
+                        <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsCurrentPageBookmarked}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ui:Button.Style>
+                </ui:Button>
+                <ui:Button Appearance="Transparent"
+                           Focusable="False"
+                           Icon="{ui:SymbolIcon Star24, Filled=True}"
+                           AutomationProperties.Name="Bookmarks"
+                           ToolTip="Bookmarks (Ctrl+Shift+O)"
+                           Command="{Binding ToggleBookmarksCommand}">
+                    <ui:Button.Style>
+                        <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsCurrentPageBookmarked}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ui:Button.Style>
+                </ui:Button>
+            </Grid>
+
+            <!-- History flyout toggle. -->
+            <ui:Button x:Name="HistoryButton"
+                       Grid.Column="6"
+                       Appearance="Transparent"
+                       Focusable="False"
+                       Icon="{ui:SymbolIcon History24}"
+                       AutomationProperties.Name="History"
+                       ToolTip="History (Ctrl+H)"
+                       Command="{Binding ToggleHistoryCommand}"
+                       Margin="2,0,2,0" />
+
             <!-- Theme toggle: two overlaid buttons (moon when dark, sun when light); only one is visible. -->
-            <Grid Grid.Column="5" Margin="4,0,2,0">
+            <Grid Grid.Column="7" Margin="4,0,2,0">
                 <ui:Button Appearance="Transparent"
                            Focusable="False"
                            Icon="{ui:SymbolIcon WeatherMoon24}"
@@ -153,7 +206,7 @@
             </Grid>
 
             <!-- Debug telemetry: WebView2 process count + total working set (drops when background tabs suspend). -->
-            <StackPanel Grid.Column="6" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,2,0">
+            <StackPanel Grid.Column="8" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,2,0">
                 <TextBlock Text="{Binding WebViewProcessCount, StringFormat='wv2: {0}'}"
                            Opacity="0.5" FontSize="11" />
                 <TextBlock Text="{Binding WebViewMemoryMb, StringFormat='· {0} MB'}"
@@ -191,6 +244,28 @@
                AllowsTransparency="True"
                PopupAnimation="Fade">
             <views:DownloadPanelView />
+        </Popup>
+
+        <!-- History flyout. -->
+        <Popup IsOpen="{Binding IsHistoryOpen}"
+               PlacementTarget="{Binding ElementName=HistoryButton}"
+               Placement="Bottom"
+               HorizontalOffset="-338"
+               VerticalOffset="2"
+               AllowsTransparency="True"
+               PopupAnimation="Fade">
+            <views:HistoryPanelView />
+        </Popup>
+
+        <!-- Bookmarks flyout. -->
+        <Popup IsOpen="{Binding IsBookmarksOpen}"
+               PlacementTarget="{Binding ElementName=BookmarkButton}"
+               Placement="Bottom"
+               HorizontalOffset="-338"
+               VerticalOffset="2"
+               AllowsTransparency="True"
+               PopupAnimation="Fade">
+            <views:BookmarksPanelView />
         </Popup>
     </Grid>
 </ui:FluentWindow>

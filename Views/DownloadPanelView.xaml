@@ -11,7 +11,12 @@
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter" />
     </UserControl.Resources>
 
-    <Border Background="#FF202020" BorderBrush="#33FFFFFF" BorderThickness="1" CornerRadius="8" Padding="0">
+    <Border Background="{ui:ThemeResource ApplicationBackgroundBrush}"
+            BorderBrush="{ui:ThemeResource ControlElevationBorderBrush}"
+            BorderThickness="1"
+            CornerRadius="8"
+            Padding="0"
+            TextElement.Foreground="{ui:ThemeResource TextFillColorPrimaryBrush}">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -30,7 +35,7 @@
                 <ItemsControl ItemsSource="{Binding Downloads}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate DataType="{x:Type vm:DownloadItemViewModel}">
-                            <Border Padding="14,8" BorderThickness="0,1,0,0" BorderBrush="#22FFFFFF">
+                            <Border Padding="14,8" BorderThickness="0,1,0,0" BorderBrush="{ui:ThemeResource ControlElevationBorderBrush}">
                                 <Grid>
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto" />

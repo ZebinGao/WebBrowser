@@ -24,9 +24,9 @@ public sealed partial class TabViewModel : ObservableObject
     [ObservableProperty] private bool _isActive;
     [ObservableProperty] private TabState _state = TabState.Loaded;
 
-    public TabViewModel(DownloadManagerService downloadManager)
+    public TabViewModel(DownloadManagerService downloadManager, HistoryService history)
     {
-        _webView = new WebViewTab(this, downloadManager);
+        _webView = new WebViewTab(this, downloadManager, history);
     }
 
     public Task InitializeAsync(CoreWebView2Environment environment)

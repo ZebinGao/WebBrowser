@@ -15,6 +15,7 @@ public sealed class TabLifecycleService
 {
     private readonly WebViewEnvironmentService _environmentService;
     private readonly DownloadManagerService _downloadManager;
+    private readonly HistoryService _history;
     private bool _isShuttingDown;
 
     /// <summary>Per-tab pending suspend timers. A tab is suspended after it stays inactive this long.</summary>
@@ -27,17 +28,18 @@ public sealed class TabLifecycleService
 
     public event EventHandler<TabViewModel?>? ActiveTabChanged;
 
-    public TabLifecycleService(WebViewEnvironmentService environmentService, DownloadManagerService downloadManager)
+    public TabLifecycleService(WebViewEnvironmentService environmentService, DownloadManagerService downloadManager, HistoryService history)
     {
         _environmentService = environmentService;
         _downloadManager = downloadManager;
+        _history = history;
         _environmentService.EnvironmentLost += OnEnvironmentLost;
     }
 
     /// <summary>Creates a tab, activates it, initializes its WebView2 against the shared environment, then navigates.</summary>
     public async Task<TabViewModel> OpenTabAsync(string? url = null)
     {
-        var tab = new TabViewModel(_downloadManager);
+        var tab = new TabViewModel(_downloadManager, _history);
         Tabs.Add(tab);
         SetActive(tab);
 
