@@ -17,6 +17,10 @@ public sealed class TabLifecycleService
     private readonly DownloadManagerService _downloadManager;
     private bool _isShuttingDown;
 
+    /// <summary>Per-tab pending suspend timers. A tab is suspended after it stays inactive this long.</summary>
+    private readonly Dictionary<TabViewModel, CancellationTokenSource> _suspendTimers = new();
+    private static readonly TimeSpan SuspendDelay = TimeSpan.FromSeconds(12);
+
     public ObservableCollection<TabViewModel> Tabs { get; } = new();
 
     public TabViewModel? ActiveTab { get; private set; }
@@ -52,11 +56,56 @@ public sealed class TabLifecycleService
         if (tab is null || ActiveTab == tab)
             return;
 
+        TabViewModel? previous = ActiveTab;
+
         foreach (var existing in Tabs)
             existing.IsActive = existing == tab;
 
         ActiveTab = tab;
         ActiveTabChanged?.Invoke(this, tab);
+
+        // Eagerly wake the tab we are switching to (cheap), then debounce-suspend the one we left.
+        _ = tab.WebView.ResumeAsync();
+        if (previous is not null && previous != tab)
+            _ = ScheduleSuspendAsync(previous);
+    }
+
+    /// <summary>
+    /// Suspend <paramref name="tab"/> after <see cref="SuspendDelay"/> of inactivity. Re-scheduling
+    /// (rapid tab switching) cancels the previous timer. The tab is only suspended if it is still
+    /// inactive when the timer fires.
+    /// </summary>
+    private async Task ScheduleSuspendAsync(TabViewModel tab)
+    {
+        if (_suspendTimers.TryGetValue(tab, out var existing))
+            existing.Cancel();
+
+        var cts = new CancellationTokenSource();
+        _suspendTimers[tab] = cts;
+
+        try
+        {
+            await Task.Delay(SuspendDelay, cts.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        _suspendTimers.Remove(tab);
+        cts.Dispose();
+
+        if (!_isShuttingDown && !tab.IsActive && Tabs.Contains(tab))
+            await tab.WebView.TrySuspendAsync();
+    }
+
+    private void CancelSuspendTimer(TabViewModel tab)
+    {
+        if (_suspendTimers.TryGetValue(tab, out var cts))
+        {
+            cts.Cancel();
+            _suspendTimers.Remove(tab);
+        }
     }
 
     /// <summary>
@@ -78,6 +127,7 @@ public sealed class TabLifecycleService
             successor = (index + 1 < Tabs.Count) ? Tabs[index + 1] : Tabs[index - 1];
 
         Tabs.Remove(tab);
+        CancelSuspendTimer(tab);
 
         if (!_isShuttingDown)
         {
@@ -98,6 +148,11 @@ public sealed class TabLifecycleService
     public async Task ShutdownAsync()
     {
         _isShuttingDown = true;
+
+        // Cancel every pending suspend so no timer fires mid-teardown.
+        foreach (var cts in _suspendTimers.Values)
+            cts.Cancel();
+        _suspendTimers.Clear();
 
         var snapshot = Tabs.ToList();
         ActiveTab = null;

@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using WebBrowser.Models;
@@ -35,6 +37,10 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private int _webViewProcessCount;
 
+    /// <summary>Total working set (MB) of the WebView2 processes backing this app — drops when background tabs suspend.</summary>
+    [ObservableProperty]
+    private int _webViewMemoryMb;
+
     /// <summary>True while the downloads flyout is open.</summary>
     [ObservableProperty]
     private bool _isDownloadsOpen;
@@ -62,6 +68,12 @@ public sealed partial class MainViewModel : ObservableObject
 
         _lifecycle.ActiveTabChanged += (_, tab) => ActiveTab = tab;
         _environmentService.ProcessCountChanged += (_, _) => WebViewProcessCount = _environmentService.ProcessInfos.Count;
+
+        // Poll total WebView2 memory every few seconds so the suspend/resume effect is visible.
+        var memoryTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(3) };
+        memoryTimer.Tick += (_, _) => RefreshWebViewMemory();
+        memoryTimer.Start();
+        RefreshWebViewMemory();
 
         _downloadService.Items.CollectionChanged += OnDownloadsCollectionChanged;
         _downloadService.RetryRequested += (_, uri) => ActiveTab?.Navigate(uri.ToString());
@@ -126,5 +138,25 @@ public sealed partial class MainViewModel : ObservableObject
                 count++;
         }
         ActiveDownloadCount = count;
+    }
+
+    /// <summary>Sum the working set of every WebView2 process the shared environment reports.</summary>
+    private void RefreshWebViewMemory()
+    {
+        try
+        {
+            long total = 0;
+            foreach (var info in _environmentService.ProcessInfos)
+            {
+                try { total += Process.GetProcessById((int)info.ProcessId).WorkingSet64; }
+                catch { /* process exited between snapshot and query */ }
+            }
+            WebViewMemoryMb = (int)(total / (1024 * 1024));
+            WebViewProcessCount = _environmentService.ProcessInfos.Count;
+        }
+        catch
+        {
+            // Environment not ready yet — retried on the next tick.
+        }
     }
 }

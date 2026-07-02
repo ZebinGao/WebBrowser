@@ -59,6 +59,7 @@
                     <Grid Margin="3,5" MinWidth="130" MaxWidth="220" Height="32">
                         <!-- Whole-tab select button -->
                         <Button Style="{StaticResource TabSelectButtonStyle}"
+                                AutomationProperties.Name="{Binding Title}"
                                 Command="{Binding DataContext.SelectTabCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
                                 CommandParameter="{Binding}">
                             <StackPanel Orientation="Horizontal" Margin="10,0,30,0">

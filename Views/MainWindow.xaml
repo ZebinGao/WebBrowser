@@ -152,13 +152,14 @@
                 </ui:Button>
             </Grid>
 
-            <!-- Debug aid: live WebView2 process count (drops as tabs close — teardown verification). -->
-            <TextBlock Grid.Column="6"
-                       Text="{Binding WebViewProcessCount, StringFormat='wv2: {0}'}"
-                       VerticalAlignment="Center"
-                       Margin="10,0,2,0"
-                       Opacity="0.5"
-                       FontSize="11" />
+            <!-- Debug telemetry: WebView2 process count + total working set (drops when background tabs suspend). -->
+            <StackPanel Grid.Column="6" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,2,0">
+                <TextBlock Text="{Binding WebViewProcessCount, StringFormat='wv2: {0}'}"
+                           Opacity="0.5" FontSize="11" />
+                <TextBlock Text="{Binding WebViewMemoryMb, StringFormat='· {0} MB'}"
+                           Opacity="0.5" FontSize="11"
+                           Margin="6,0,0,0" />
+            </StackPanel>
         </Grid>
 
         <!--

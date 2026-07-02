@@ -4,6 +4,7 @@ using System.Windows.Media.Imaging;
 using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.Wpf;
 using WebBrowser.Helpers;
+using WebBrowser.Models;
 using WebBrowser.Services;
 using WebBrowser.ViewModels;
 
@@ -210,8 +211,32 @@ public sealed class WebViewTab
         catch { /* ignore */ }
     }
 
-    // --- M5 hooks (suspend/resume) — implemented in M5, no-ops for now ---
+    // --- Suspend/resume (M5): freeze a background tab's renderer to free memory ---
 
-    public Task TrySuspendAsync() => Task.CompletedTask;
-    public Task ResumeAsync() => Task.CompletedTask;
+    /// <summary>Suspend this tab's renderer. Safe to call repeatedly; no-op if already suspended.</summary>
+    public async Task TrySuspendAsync()
+    {
+        if (!_initialized || IsSuspended)
+            return;
+
+        try { await Core.TrySuspendAsync(); }
+        catch { /* suspend isn't always possible — ignore */ }
+
+        IsSuspended = Core.IsSuspended;
+        _vm.State = IsSuspended ? TabState.Suspended : TabState.Loaded;
+    }
+
+    /// <summary>Wake a suspended tab so it's interactive again.</summary>
+    public Task ResumeAsync()
+    {
+        if (!_initialized || !IsSuspended)
+            return Task.CompletedTask;
+
+        try { Core.Resume(); }
+        catch { /* ignore */ }
+
+        IsSuspended = Core.IsSuspended;
+        _vm.State = IsSuspended ? TabState.Suspended : TabState.Loaded;
+        return Task.CompletedTask;
+    }
 }
