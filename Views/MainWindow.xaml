@@ -124,7 +124,7 @@
                            ToolTip="Switch to light theme"
                            Command="{Binding ToggleThemeCommand}">
                     <ui:Button.Style>
-                        <Style TargetType="ui:Button">
+                        <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsDarkTheme}" Value="False">
                                     <Setter Property="Visibility" Value="Collapsed" />
@@ -140,7 +140,7 @@
                            ToolTip="Switch to dark theme"
                            Command="{Binding ToggleThemeCommand}">
                     <ui:Button.Style>
-                        <Style TargetType="ui:Button">
+                        <Style TargetType="ui:Button" BasedOn="{StaticResource {x:Type ui:Button}}">
                             <Setter Property="Visibility" Value="Collapsed" />
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsDarkTheme}" Value="False">
