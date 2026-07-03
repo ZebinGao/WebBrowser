@@ -7,7 +7,7 @@ using Wpf.Ui.Controls;
 namespace WebBrowser.Views;
 
 /// <summary>
-/// Fluent shell. Hosts the title bar, toolbar/address bar, and the overlaid tab content region.
+/// Fluent 外壳。承载标题栏、工具栏/地址栏，以及 overlay 的标签内容区。
 /// </summary>
 public partial class MainWindow : FluentWindow
 {
@@ -28,11 +28,10 @@ public partial class MainWindow : FluentWindow
     }
 
     /// <summary>
-    /// FluentWindow.OnClosing is synchronous, but tearing down WebView2 tabs is async.
-    /// Pattern: on the first close, cancel it and run async teardown, then Close() again — the
-    /// <see cref="_isClosing"/> guard lets the second pass through. The <c>Task.Yield</c> is essential:
-    /// it lets WPF finish aborting the first close (resetting its internal closing flag) before we
-    /// initiate the second, otherwise Close() throws "window is closing".
+    /// FluentWindow.OnClosing 是同步的，但拆卸 WebView2 标签是异步的。
+    /// 模式：首次关闭时先取消并跑异步拆卸，再 Close() 一次 —— <see cref="_isClosing"/> 守卫让第二次放行。
+    /// <c>Task.Yield</c> 至关重要：它让 WPF 完成对首次关闭的中止（重置其内部 closing 标志）后，
+    /// 我们再发起第二次，否则 Close() 抛 "window is closing"。
     /// </summary>
     protected override async void OnClosing(CancelEventArgs e)
     {
@@ -52,7 +51,7 @@ public partial class MainWindow : FluentWindow
         }
         catch
         {
-            // Swallow teardown errors so the window still closes.
+            // 吞掉拆卸错误，确保窗口仍能关闭。
         }
 
         await Task.Yield();

@@ -1,6 +1,6 @@
 namespace WebBrowser.Models;
 
-/// <summary>States for the custom download manager state machine (used from M3 onward).</summary>
+/// <summary>自定义下载管理器状态机的状态（自 M3 起使用）。</summary>
 public enum DownloadState
 {
     NotStarted,

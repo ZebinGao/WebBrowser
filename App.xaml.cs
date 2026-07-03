@@ -9,8 +9,7 @@ using Wpf.Ui.Controls;
 namespace WebBrowser;
 
 /// <summary>
-/// Application entry point. Wires up DI (singleton services + main view model), shows the main window,
-/// and disposes the shared WebView2 environment on exit.
+/// 应用入口。装配 DI（单例服务 + 主 view model），显示主窗口，并在退出时释放共享的 WebView2 environment。
 /// </summary>
 public partial class App : Application
 {
@@ -33,7 +32,7 @@ public partial class App : Application
         var mainWindow = new MainWindow { DataContext = mainViewModel };
         mainWindow.Show();
 
-        // Match the OS dark/light theme so Mica and controls blend with the system.
+        // 跟随系统 dark/light 主题，使 Mica 与控件和系统融为一体。
         bool systemDark = !IsSystemLightTheme();
         ApplicationThemeManager.Apply(
             systemDark ? ApplicationTheme.Dark : ApplicationTheme.Light,
@@ -41,11 +40,11 @@ public partial class App : Application
             true);
         mainViewModel.IsDarkTheme = systemDark;
 
-        // Open the initial tab once the window is on screen (fire-and-forget, errors surfaced).
+        // 窗口上屏后打开初始标签（fire-and-forget，错误会冒泡呈现）。
         _ = ShowInitialTabAsync(mainViewModel);
     }
 
-    /// <summary>Reads the user's "AppsUseLightTheme" registry value (0 = dark, 1 = light).</summary>
+    /// <summary>读取用户的 "AppsUseLightTheme" 注册表值（0 = dark，1 = light）。</summary>
     private static bool IsSystemLightTheme()
     {
         try
@@ -80,7 +79,7 @@ public partial class App : Application
     {
         if (_services is not null)
         {
-            // Flush any pending history/bookmark writes before the process exits.
+            // 进程退出前，把待写入的历史/书签刷盘。
             _services.GetRequiredService<HistoryService>().Dispose();
             _services.GetRequiredService<BookmarksService>().Dispose();
             _services.GetRequiredService<WebViewEnvironmentService>().Dispose();

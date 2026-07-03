@@ -11,10 +11,9 @@ using WebBrowser.ViewModels;
 namespace WebBrowser.WebView;
 
 /// <summary>
-/// Owns a single <see cref="WebView2"/> control instance for the lifetime of one tab, plus every
-/// event subscription tied to it. The view layer "adopts" the already-built control via data binding
-/// (its <see cref="Control"/> is hosted in a ContentPresenter) — the control is never recreated, which
-/// is what keeps tab switching instant and avoids reparenting/HWND churn.
+/// 拥有某个标签整个生命周期内的单个 <see cref="WebView2"/> 控件实例，以及绑定在它上面的所有事件订阅。
+/// view 层通过数据绑定“领养”这个已构建好的控件（其 <see cref="Control"/> 托管在 ContentPresenter 中）
+/// —— 控件从不被重建，这正是让标签切换瞬时完成、并避免 reparent/HWND 抖动的关键。
 /// </summary>
 public sealed class WebViewTab
 {
@@ -24,7 +23,7 @@ public sealed class WebViewTab
     private bool _initialized;
     private bool _tornDown;
 
-    /// <summary>Per-host favicon cache so we don't re-fetch/decode on every intra-site navigation.</summary>
+    /// <summary>按 host 缓存的 favicon，避免每次站内导航都重新拉取/解码。</summary>
     private static readonly Dictionary<string, ImageSource> FaviconCache = new();
 
     public WebView2 Control { get; }
@@ -36,9 +35,9 @@ public sealed class WebViewTab
     public bool IsSuspended { get; private set; }
 
     /// <summary>
-    /// Raised when a page asks for a new window (<c>target="_blank"</c> / <c>window.open()</c>) with an
-    /// http(s) URL. The tab itself only cancels the bare-Edge popup; the lifecycle service decides what to
-    /// do (open a new app tab) so this class stays decoupled from the tab collection.
+    /// 当页面请求新窗口（<c>target="_blank"</c> / <c>window.open()</c>）且带 http(s) URL 时触发。
+    /// 标签本身只取消裸的 Edge 弹窗；具体怎么做（打开一个新的应用标签）由生命周期服务决定，
+    /// 从而让本类与标签集合保持解耦。
     /// </summary>
     public event EventHandler<string?>? NewTabRequested;
 
@@ -55,9 +54,8 @@ public sealed class WebViewTab
     }
 
     /// <summary>
-    /// Creates the CoreWebView2 controller for this control against the shared environment.
-    /// The WPF control needs to be loaded into the visual tree (have a parent HWND) before its
-    /// controller can initialize, so we await <see cref="FrameworkElement.Loaded"/> if needed.
+    /// 基于共享 environment 为本控件创建 CoreWebView2 controller。WPF 控件必须先被加载进
+    /// 可视树（拥有 parent HWND）后其 controller 才能初始化，因此必要时会等待 <see cref="FrameworkElement.Loaded"/>。
     /// </summary>
     public async Task InitializeAsync(CoreWebView2Environment environment)
     {
@@ -85,12 +83,12 @@ public sealed class WebViewTab
     private void ConfigureSettings()
     {
         var settings = Core.Settings;
-        settings.AreDevToolsEnabled = true;          // personal-use browser: keep devtools
+        settings.AreDevToolsEnabled = true;          // 个人用浏览器：保留 devtools
         settings.IsBuiltInErrorPageEnabled = true;
-        settings.IsZoomControlEnabled = false;       // we own the chrome
-        settings.IsStatusBarEnabled = false;         // we surface status elsewhere
-        settings.AreBrowserAcceleratorKeysEnabled = true; // Ctrl+W etc. reach the host
-        // Default download bar is suppressed in M3 by handling DownloadStarting; left enabled here.
+        settings.IsZoomControlEnabled = false;       // chrome 由我们接管
+        settings.IsStatusBarEnabled = false;         // 状态信息我们另处呈现
+        settings.AreBrowserAcceleratorKeysEnabled = true; // Ctrl+W 等可达宿主
+        // 默认下载条已在 M3 通过处理 DownloadStarting 抑制；此处保持启用。
     }
 
     private void HookEvents()
@@ -122,7 +120,7 @@ public sealed class WebViewTab
         _downloadManager.Unregister(Core);
     }
 
-    // WPF WebView2 raises these on the UI thread, so no dispatcher marshaling needed.
+    // WPF WebView2 在 UI 线程上引发这些事件，因此无需 dispatcher 转发。
     private void OnNavigationStarting(object? sender, CoreWebView2NavigationStartingEventArgs e)
         => _vm.IsLoading = true;
 
@@ -130,8 +128,8 @@ public sealed class WebViewTab
     {
         _vm.IsLoading = false;
 
-        // Record successful http(s) navigations to history. Skips about:/data:/blob: and failed loads;
-        // Core.Source is the WebView2-normalized URL and makes a stable dedup key.
+        // 把成功的 http(s) 导航记录进历史。跳过 about:/data:/blob: 以及失败的加载；
+        // Core.Source 是 WebView2 规范化后的 URL，可作稳定的去重键。
         if (e.IsSuccess
             && Uri.TryCreate(Core.Source, UriKind.Absolute, out var uri)
             && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
@@ -168,23 +166,23 @@ public sealed class WebViewTab
             using var stream = await Core.GetFaviconAsync(CoreWebView2FaviconImageFormat.Png);
             var bitmap = new BitmapImage();
             bitmap.BeginInit();
-            bitmap.CacheOption = BitmapCacheOption.OnLoad; // detach from the stream so we can dispose it
+            bitmap.CacheOption = BitmapCacheOption.OnLoad; // 与流解绑，以便我们能 dispose 它
             bitmap.StreamSource = stream;
             bitmap.EndInit();
-            bitmap.Freeze(); // cross-thread safe
+            bitmap.Freeze(); // 跨线程安全
 
             FaviconCache[host] = bitmap;
             _vm.Favicon = bitmap;
         }
         catch
         {
-            // No favicon available or decode failed — leave the default (null) icon.
+            // 没有 favicon 或解码失败 —— 留用默认（null）图标。
         }
     }
 
-    // target="_blank" / window.open() would otherwise pop a bare Edge window with no app chrome.
-    // Intercept web URLs and let the lifecycle service open a proper app tab instead. Non-web schemes
-    // (mailto:, tel:, custom protocol) are left alone so the OS default handler runs.
+    // target="_blank" / window.open() 否则会弹出一个没有应用 chrome 的裸 Edge 窗口。
+    // 拦截 web URL，交给生命周期服务去开一个规范的应用标签。非 web scheme
+    //（mailto:、tel:、自定义协议）则放行，由 OS 默认处理程序接管。
     private void OnNewWindowRequested(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
     {
         if (Uri.TryCreate(e.Uri, UriKind.Absolute, out var uri)
@@ -221,8 +219,8 @@ public sealed class WebViewTab
     }
 
     /// <summary>
-    /// Ordered teardown that releases this tab's renderer process. Order matters; each step is
-    /// fault-tolerant so a dead Core (e.g. after <c>BrowserProcessExited</c>) doesn't block shutdown.
+    /// 有序的 teardown，释放本标签的 renderer 进程。顺序很重要；每一步都容错，
+    /// 这样即使 Core 已死（例如 <c>BrowserProcessExited</c> 之后）也不会阻塞关闭。
     /// </summary>
     public async Task TearDownAsync()
     {
@@ -231,45 +229,45 @@ public sealed class WebViewTab
         _tornDown = true;
 
         try { UnhookEvents(); }
-        catch { /* ignore */ }
+        catch { /* 忽略 */ }
 
         try
         {
-            // A suspended control must be resumed before disposal or it can hang (M5 enforces this too).
+            // 已挂起的控件在 dispose 前必须先恢复，否则可能挂起（M5 也强制了这一点）。
             if (Control.CoreWebView2 is not null && IsSuspended)
                 await ResumeAsync();
         }
-        catch { /* ignore */ }
+        catch { /* 忽略 */ }
 
-        // The WPF WebView2 is an HwndHost: Dispose() destroys the host window, which closes the
-        // CoreWebView2Controller and tears down this tab's renderer process.
+        // WPF WebView2 是一个 HwndHost：Dispose() 会销毁宿主窗口，从而关闭
+        // CoreWebView2Controller 并 teardown 本标签的 renderer 进程。
         try { Control.Dispose(); }
-        catch { /* ignore */ }
+        catch { /* 忽略 */ }
     }
 
-    // --- Suspend/resume (M5): freeze a background tab's renderer to free memory ---
+    // --- 挂起/恢复（M5）：冻结后台标签的 renderer 以释放内存 ---
 
-    /// <summary>Suspend this tab's renderer. Safe to call repeatedly; no-op if already suspended.</summary>
+    /// <summary>挂起本标签的 renderer。可重复调用；已挂起则为 no-op。</summary>
     public async Task TrySuspendAsync()
     {
         if (!_initialized || IsSuspended)
             return;
 
         try { await Core.TrySuspendAsync(); }
-        catch { /* suspend isn't always possible — ignore */ }
+        catch { /* 并非总能挂起 —— 忽略 */ }
 
         IsSuspended = Core.IsSuspended;
         _vm.State = IsSuspended ? TabState.Suspended : TabState.Loaded;
     }
 
-    /// <summary>Wake a suspended tab so it's interactive again.</summary>
+    /// <summary>唤醒一个已挂起的标签，使其重新可交互。</summary>
     public Task ResumeAsync()
     {
         if (!_initialized || !IsSuspended)
             return Task.CompletedTask;
 
         try { Core.Resume(); }
-        catch { /* ignore */ }
+        catch { /* 忽略 */ }
 
         IsSuspended = Core.IsSuspended;
         _vm.State = IsSuspended ? TabState.Suspended : TabState.Loaded;

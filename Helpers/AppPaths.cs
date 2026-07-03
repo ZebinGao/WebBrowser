@@ -3,20 +3,20 @@ using System.IO;
 namespace WebBrowser.Helpers;
 
 /// <summary>
-/// Centralized filesystem paths for the app. The WebView2 user-data folder is kept under
-/// %LOCALAPPDATA%\WebBrowser so profiles/cache survive across builds and stay user-scoped.
+/// 集中管理应用所需的文件系统路径。WebView2 的 user-data 目录放在
+/// %LOCALAPPDATA%\WebBrowser 下，使 profile/缓存跨构建保留，且按用户隔离。
 /// </summary>
 public static class AppPaths
 {
     public static string AppDataRoot { get; }
 
-    /// <summary>Shared WebView2 user-data folder. One folder =&gt; one shared browser process for all tabs.</summary>
+    /// <summary>共享的 WebView2 user-data 目录。一个目录 =&gt; 所有标签共享同一个 browser 进程。</summary>
     public static string WebView2UserDataFolder { get; }
 
-    /// <summary>Persisted browsing history (JSON, System.Text.Json).</summary>
+    /// <summary>持久化的浏览历史（JSON，System.Text.Json）。</summary>
     public static string HistoryPath { get; }
 
-    /// <summary>Persisted bookmarks (JSON, System.Text.Json).</summary>
+    /// <summary>持久化的书签（JSON，System.Text.Json）。</summary>
     public static string BookmarksPath { get; }
 
     static AppPaths()

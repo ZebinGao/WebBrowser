@@ -3,8 +3,8 @@ using System.Windows.Controls;
 namespace WebBrowser.Views;
 
 /// <summary>
-/// Horizontal tab strip: an <see cref="ItemsControl"/> of tabs (each a select button with a close overlay)
-/// plus a "new tab" button. Pure view — all interaction is via commands bound to <see cref="ViewModels.MainViewModel"/>.
+/// 水平标签条：<see cref="ItemsControl"/> 形式的标签列表（每项为带关闭 overlay 的选择按钮）
+/// 外加一个"新建标签"按钮。纯 view —— 所有交互通过绑定到 <see cref="ViewModels.MainViewModel"/> 的命令完成。
 /// </summary>
 public partial class TabStripView : UserControl
 {

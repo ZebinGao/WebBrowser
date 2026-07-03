@@ -8,16 +8,16 @@ using WebBrowser.ViewModels;
 namespace WebBrowser.Services;
 
 /// <summary>
-/// Owns the custom download manager. Centralizes <see cref="CoreWebView2.DownloadStarting"/> handling
-/// for every tab (so wiring lives in one place), suppresses the default WebView2 download bar, picks a
-/// unique path under the user's Downloads folder, and maintains the live collection of downloads.
+/// 持有自定义下载管理器。集中处理每个标签的 <see cref="CoreWebView2.DownloadStarting"/>
+/// （接线只在一处），抑制 WebView2 默认下载条，在用户 Downloads 目录下选定唯一路径，
+/// 并维护实时下载集合。
 /// </summary>
 public sealed class DownloadManagerService
 {
-    // FOLDERID_Downloads — the real per-user Downloads folder (not always %USERPROFILE%\Downloads).
+    // FOLDERID_Downloads —— 真实的按用户 Downloads 目录（不一定总是 %USERPROFILE%\Downloads）。
     private static readonly Guid FolderIdDownloads = new("374DE290-123F-4565-9164-39C4925E467B");
 
-    /// <summary>Downloads land here by default. Resolved via the shell KnownFolder API, created if missing.</summary>
+    /// <summary>下载默认落到此处。通过 shell KnownFolder API 解析，缺失时创建。</summary>
     public static string DefaultDownloadFolder { get; } = ResolveDownloadsFolder();
 
     private static string ResolveDownloadsFolder()
@@ -43,22 +43,22 @@ public sealed class DownloadManagerService
 
     public ObservableCollection<DownloadItemViewModel> Items { get; } = new();
 
-    /// <summary>Raised when a download is retried; the host should navigate a tab to the URL to re-trigger it.</summary>
+    /// <summary>重试下载时触发；宿主应让某标签导航到该 URL 以重新触发下载。</summary>
     public event EventHandler<Uri>? RetryRequested;
 
-    /// <summary>Hook a tab's CoreWebView2 so its downloads are intercepted here.</summary>
+    /// <summary>挂接某标签的 CoreWebView2，使它的下载在此被拦截。</summary>
     public void Register(CoreWebView2 core) => core.DownloadStarting += OnDownloadStarting;
 
-    /// <summary>Unhook on teardown so the (possibly dead) Core isn't kept alive by this handler.</summary>
+    /// <summary>拆卸时解挂，避免（可能已死的）Core 因该 handler 而不被回收。</summary>
     public void Unregister(CoreWebView2 core)
     {
         try { core.DownloadStarting -= OnDownloadStarting; }
-        catch { /* Core may already be gone */ }
+        catch { /* Core 可能已不存在 */ }
     }
 
     private void OnDownloadStarting(object? sender, CoreWebView2DownloadStartingEventArgs e)
     {
-        // Suppress the built-in download bar; we render our own UI.
+        // 抑制内置下载条；我们自己渲染 UI。
         e.Handled = true;
 
         CoreWebView2DownloadOperation operation = e.DownloadOperation;
@@ -71,13 +71,13 @@ public sealed class DownloadManagerService
 
         string fullPath = ResolveUniquePath(Path.Combine(DefaultDownloadFolder, fileName));
 
-        // ResultFilePath can only be set synchronously in this handler (#2890).
+        // ResultFilePath 只能在此 handler 内同步设置（#2890）。
         e.ResultFilePath = fullPath;
 
         var item = new DownloadItemViewModel(operation, fullPath);
         item.RetryRequested += uri => RetryRequested?.Invoke(this, uri);
 
-        // DownloadStarting can fire on a non-UI thread; marshal collection mutation to the UI thread.
+        // DownloadStarting 可能在非 UI 线程触发；集合变更需转发到 UI 线程。
         Application.Current.Dispatcher.BeginInvoke(() => Items.Insert(0, item));
     }
 
@@ -91,7 +91,7 @@ public sealed class DownloadManagerService
         return "download";
     }
 
-    /// <summary>If a file already exists, append " (1)", " (2)", ... up to 9999 before the extension.</summary>
+    /// <summary>若文件已存在，在扩展名前追加 " (1)"、" (2)"… 直到 9999。</summary>
     private static string ResolveUniquePath(string path)
     {
         if (!File.Exists(path))

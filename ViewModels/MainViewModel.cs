@@ -13,11 +13,10 @@ using Wpf.Ui.Controls;
 namespace WebBrowser.ViewModels;
 
 /// <summary>
-/// Top-level view model. Binds the tab collection and active tab from <see cref="TabLifecycleService"/>,
-/// exposes tab commands, and surfaces the download manager, history, and bookmarks (live lists,
-/// panel toggles, and the star-button state). The lifecycle service owns all open/close/teardown
-/// orchestration; history is recorded by each tab's <see cref="WebBrowser.WebView.WebViewTab"/> on
-/// navigation completion.
+/// 顶层 view model。绑定来自 <see cref="TabLifecycleService"/> 的标签集合与活动标签，暴露标签命令，
+/// 并呈现 download manager、history 与 bookmarks（实时列表、面板开关以及星标按钮状态）。
+/// 生命周期服务拥有所有打开/关闭/teardown 的编排；history 在每次导航完成时由各标签的
+/// <see cref="WebBrowser.WebView.WebViewTab"/> 记录。
 /// </summary>
 public sealed partial class MainViewModel : ObservableObject
 {
@@ -27,51 +26,51 @@ public sealed partial class MainViewModel : ObservableObject
     private readonly HistoryService _history;
     private readonly BookmarksService _bookmarks;
 
-    /// <summary>URL the initial tab opens on launch. New blank tabs navigate to about:blank.</summary>
+    /// <summary>初始标签在启动时打开的 URL。新空白标签导航到 about:blank。</summary>
     private const string DefaultStartUrl = "https://www.bing.com";
 
     public ObservableCollection<TabViewModel> Tabs => _lifecycle.Tabs;
 
     public ObservableCollection<DownloadItemViewModel> Downloads => _downloadService.Items;
 
-    /// <summary>Browsing history, newest first. Bound by the history panel.</summary>
+    /// <summary>浏览历史，最新的在最前。由历史面板绑定。</summary>
     public ObservableCollection<HistoryEntry> History => _history.Entries;
 
-    /// <summary>Bookmarks, newest first. Bound by the bookmarks panel.</summary>
+    /// <summary>书签，最新的在最前。由书签面板绑定。</summary>
     public ObservableCollection<Bookmark> Bookmarks => _bookmarks.Items;
 
     [ObservableProperty]
     private TabViewModel? _activeTab;
 
-    /// <summary>Live count of WebView2 runtime processes (browser/GPU/network/renderer). Debug aid.</summary>
+    /// <summary>WebView2 运行时进程的实时数量（browser/GPU/network/renderer）。调试辅助。</summary>
     [ObservableProperty]
     private int _webViewProcessCount;
 
-    /// <summary>Total working set (MB) of the WebView2 processes backing this app — drops when background tabs suspend.</summary>
+    /// <summary>支撑本应用的 WebView2 进程总 working set（MB）—— 后台标签挂起时会下降。</summary>
     [ObservableProperty]
     private int _webViewMemoryMb;
 
-    /// <summary>True while the downloads flyout is open.</summary>
+    /// <summary>下载浮层打开时为 true。</summary>
     [ObservableProperty]
     private bool _isDownloadsOpen;
 
-    /// <summary>True while the history flyout is open.</summary>
+    /// <summary>历史浮层打开时为 true。</summary>
     [ObservableProperty]
     private bool _isHistoryOpen;
 
-    /// <summary>True while the bookmarks flyout is open.</summary>
+    /// <summary>书签浮层打开时为 true。</summary>
     [ObservableProperty]
     private bool _isBookmarksOpen;
 
-    /// <summary>Current dark/light theme — drives the toggle button's icon and applied theme.</summary>
+    /// <summary>当前 dark/light 主题 —— 驱动切换按钮的图标与所应用的主题。</summary>
     [ObservableProperty]
     private bool _isDarkTheme = true;
 
-    /// <summary>True when the active tab's URL is already bookmarked — drives the star icon (filled vs outline).</summary>
+    /// <summary>当活动标签的 URL 已被收藏时为 true —— 驱动星标图标（实心 vs 空心）。</summary>
     [ObservableProperty]
     private bool _isCurrentPageBookmarked;
 
-    /// <summary>Number of downloads currently in progress or paused — drives the toolbar badge.</summary>
+    /// <summary>当前正在进行或暂停的下载条数 —— 驱动工具栏角标。</summary>
     public int ActiveDownloadCount
     {
         get => _activeDownloadCount;
@@ -79,7 +78,7 @@ public sealed partial class MainViewModel : ObservableObject
     }
     private int _activeDownloadCount;
 
-    /// <summary>The tab whose PropertyChanged we are currently subscribed to (for star-state tracking).</summary>
+    /// <summary>当前正在订阅其 PropertyChanged 的标签（用于跟踪星标状态）。</summary>
     private TabViewModel? _bookmarkedTab;
 
     public MainViewModel(
@@ -98,7 +97,7 @@ public sealed partial class MainViewModel : ObservableObject
         _lifecycle.ActiveTabChanged += (_, tab) => ActiveTab = tab;
         _environmentService.ProcessCountChanged += (_, _) => WebViewProcessCount = _environmentService.ProcessInfos.Count;
 
-        // Poll total WebView2 memory every few seconds so the suspend/resume effect is visible.
+        // 每隔几秒轮询一次 WebView2 总内存，让挂起/恢复的效果可见。
         var memoryTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = TimeSpan.FromSeconds(3) };
         memoryTimer.Tick += (_, _) => RefreshWebViewMemory();
         memoryTimer.Start();
@@ -107,17 +106,17 @@ public sealed partial class MainViewModel : ObservableObject
         _downloadService.Items.CollectionChanged += OnDownloadsCollectionChanged;
         _downloadService.RetryRequested += (_, uri) => ActiveTab?.Navigate(uri.ToString());
 
-        // Adding/removing a bookmark may flip the current page's bookmarked state.
+        // 增删书签可能翻转当前页面的收藏状态。
         _bookmarks.Items.CollectionChanged += (_, _) => RecomputeBookmarkState();
     }
 
-    /// <summary>Called after the main window is shown — opens the initial tab.</summary>
+    /// <summary>在主窗口显示后调用 —— 打开初始标签。</summary>
     public Task InitializeAsync() => _lifecycle.OpenTabAsync(DefaultStartUrl);
 
-    /// <summary>Navigate the active tab to the given address-bar input.</summary>
+    /// <summary>把活动标签导航到给定的地址栏输入。</summary>
     public void NavigateActive(string? input) => ActiveTab?.Navigate(input);
 
-    /// <summary>Tear down every tab so renderer processes are released before exit.</summary>
+    /// <summary>teardown 每个标签，使 renderer 进程在退出前被释放。</summary>
     public Task ShutdownAsync() => _lifecycle.ShutdownAsync();
 
     [RelayCommand]
@@ -148,7 +147,7 @@ public sealed partial class MainViewModel : ObservableObject
             true);
     }
 
-    /// <summary>Star button: bookmark the active page, or un-bookmark it if already saved.</summary>
+    /// <summary>星标按钮：收藏当前页面，若已收藏则取消收藏。</summary>
     [RelayCommand]
     private void ToggleCurrentBookmark()
     {
@@ -158,7 +157,7 @@ public sealed partial class MainViewModel : ObservableObject
         RecomputeBookmarkState();
     }
 
-    /// <summary>Open a history entry in the active tab.</summary>
+    /// <summary>在活动标签中打开一条历史记录。</summary>
     [RelayCommand]
     private void OpenHistoryEntry(HistoryEntry? entry) => OpenUrl(entry?.Url);
 
@@ -172,7 +171,7 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void ClearHistory() => _history.Clear();
 
-    /// <summary>Open a bookmark in the active tab.</summary>
+    /// <summary>在活动标签中打开一个书签。</summary>
     [RelayCommand]
     private void OpenBookmark(Bookmark? bookmark) => OpenUrl(bookmark?.Url);
 
@@ -194,7 +193,7 @@ public sealed partial class MainViewModel : ObservableObject
         => Uri.TryCreate(url, UriKind.Absolute, out var uri)
            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
 
-    // --- Star-button state: recompute when the active tab or its address changes ---
+    // --- 星标按钮状态：当活动标签或其地址变化时重算 ---
 
     partial void OnActiveTabChanged(TabViewModel? value)
     {
@@ -245,7 +244,7 @@ public sealed partial class MainViewModel : ObservableObject
         ActiveDownloadCount = count;
     }
 
-    /// <summary>Sum the working set of every WebView2 process the shared environment reports.</summary>
+    /// <summary>对共享 environment 上报的每个 WebView2 进程的 working set 求和。</summary>
     private void RefreshWebViewMemory()
     {
         try
@@ -254,14 +253,14 @@ public sealed partial class MainViewModel : ObservableObject
             foreach (var info in _environmentService.ProcessInfos)
             {
                 try { total += Process.GetProcessById((int)info.ProcessId).WorkingSet64; }
-                catch { /* process exited between snapshot and query */ }
+                catch { /* 进程在快照与查询之间退出 */ }
             }
             WebViewMemoryMb = (int)(total / (1024 * 1024));
             WebViewProcessCount = _environmentService.ProcessInfos.Count;
         }
         catch
         {
-            // Environment not ready yet — retried on the next tick.
+            // environment 尚未就绪 —— 下一个 tick 会重试。
         }
     }
 }

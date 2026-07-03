@@ -3,8 +3,8 @@ using System.Globalization;
 namespace WebBrowser.Helpers;
 
 /// <summary>
-/// Turns whatever the user typed in the address bar into a navigable URL:
-/// absolute http(s)/about URIs pass through, bare domains get https://, everything else is a web search.
+/// 将用户在地址栏输入的内容转换为可导航的 URL：
+/// 绝对 http(s)/about URI 直接放行，裸域名补 https://，其余一律作为网页搜索。
 /// </summary>
 public static class UrlHelper
 {
@@ -19,7 +19,7 @@ public static class UrlHelper
         if (string.Equals(text, "about:blank", StringComparison.OrdinalIgnoreCase))
             return "about:blank";
 
-        // Already a full URI with a known scheme.
+        // 已是带已知 scheme 的完整 URI。
         if (Uri.TryCreate(text, UriKind.Absolute, out var absolute) &&
             (absolute.Scheme == Uri.UriSchemeHttp ||
              absolute.Scheme == Uri.UriSchemeHttps ||
@@ -29,13 +29,13 @@ public static class UrlHelper
             return absolute.ToString();
         }
 
-        // "localhost:5000" or "example.com/path" — looks like a host, not a search.
+        // "localhost:5000" 或 "example.com/path" —— 看起来是主机名，而非搜索词。
         var noSpaces = !text.Contains(' ');
         var looksLikeDomain = noSpaces && text.Contains('.') && !text.EndsWith('.');
         if (looksLikeDomain)
             return "https://" + text;
 
-        // Fall back to a web search.
+        // 回退到网页搜索。
         return SearchEngine + Uri.EscapeDataString(text);
     }
 }

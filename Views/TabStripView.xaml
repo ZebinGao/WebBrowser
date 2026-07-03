@@ -9,7 +9,7 @@
              d:DesignHeight="44" d:DesignWidth="700">
     <UserControl.Resources>
         <ResourceDictionary>
-            <!-- A tab-shaped button: transparent, rounded, hover/active highlight via the IsActive flag on TabViewModel. -->
+            <!-- 标签形按钮：透明、圆角，悬停/激活高亮由 TabViewModel 的 IsActive 标志驱动。 -->
             <Style x:Key="TabSelectButtonStyle" TargetType="Button">
                 <Setter Property="Background" Value="Transparent" />
                 <Setter Property="BorderThickness" Value="0" />
@@ -55,9 +55,9 @@
             </ItemsControl.ItemsPanel>
             <ItemsControl.ItemTemplate>
                 <DataTemplate DataType="{x:Type vm:TabViewModel}">
-                    <!-- Grid lets the close button overlay the right edge of the select button. -->
+                    <!-- 用 Grid 让关闭按钮 overlay 在选择按钮的右边缘。 -->
                     <Grid Margin="3,5" MinWidth="130" MaxWidth="220" Height="32">
-                        <!-- Whole-tab select button -->
+                        <!-- 整标签选择按钮 -->
                         <Button Style="{StaticResource TabSelectButtonStyle}"
                                 AutomationProperties.Name="{Binding Title}"
                                 Command="{Binding DataContext.SelectTabCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
@@ -84,7 +84,7 @@
                                            FontSize="12" />
                             </StackPanel>
                         </Button>
-                        <!-- Close button overlay (topmost at the right edge) -->
+                        <!-- 关闭按钮 overlay（位于右边缘最上层） -->
                         <ui:Button Appearance="Transparent"
                                    Icon="{ui:SymbolIcon Dismiss24}"
                                    AutomationProperties.Name="Close tab"

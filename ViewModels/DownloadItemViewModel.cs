@@ -8,10 +8,10 @@ using WebBrowser.Models;
 namespace WebBrowser.ViewModels;
 
 /// <summary>
-/// One download's view model + state machine. Wraps a <see cref="CoreWebView2DownloadOperation"/>:
-/// progress/speed come from <c>BytesReceivedChanged</c>, lifecycle from <c>StateChanged</c> (both fire
-/// on a worker thread, so every update is marshaled to the UI thread). Paused/Cancelled are local UI
-/// states on top of the operation's InProgress/Interrupted/Completed states.
+/// 单个下载的 view model + 状态机。包装 <see cref="CoreWebView2DownloadOperation"/>：
+/// 进度/速度来自 <c>BytesReceivedChanged</c>，生命周期来自 <c>StateChanged</c>（二者都在
+/// worker 线程触发，故每次更新都转发到 UI 线程）。Paused/Cancelled 是叠加在 operation 的
+/// InProgress/Interrupted/Completed 之上的本地 UI 状态。
 /// </summary>
 public sealed partial class DownloadItemViewModel : ObservableObject
 {
@@ -43,7 +43,7 @@ public sealed partial class DownloadItemViewModel : ObservableObject
     public bool CanOpen => State == DownloadState.Completed;
     public bool CanRetry => State == DownloadState.Interrupted || State == DownloadState.Cancelled;
 
-    /// <summary>Raised when the user requests a retry; the source URL is the payload.</summary>
+    /// <summary>用户请求重试时触发；载荷为源 URL。</summary>
     public event Action<Uri>? RetryRequested;
 
     public DownloadItemViewModel(CoreWebView2DownloadOperation operation, string fullPath)
@@ -108,10 +108,9 @@ public sealed partial class DownloadItemViewModel : ObservableObject
     }
 
     /// <summary>
-    /// Robustly coerces the download operation's byte counts to <see cref="long"/>. The exact type of
-    /// <c>BytesReceived</c>/<c>TotalBytesToReceive</c> varies between the WinRT projection and the COM
-    /// interop wrapper (long / ulong / ulong?); boxing + <see cref="Convert"/> handles all of them, and
-    /// null (unknown total size) becomes 0.
+    /// 稳健地将下载 operation 的字节计数转换为 <see cref="long"/>。<c>BytesReceived</c>/<c>TotalBytesToReceive</c>
+    /// 的确切类型在 WinRT projection 与 COM interop wrapper 之间不一致（long / ulong / ulong?）；
+    /// boxing + <see cref="Convert"/> 可统一处理，null（总大小未知）转为 0。
     /// </summary>
     private static long ToInt64(object? value) =>
         value is null ? 0 : ((IConvertible)value).ToInt64(System.Globalization.CultureInfo.InvariantCulture);
@@ -150,7 +149,7 @@ public sealed partial class DownloadItemViewModel : ObservableObject
     {
         _cancelled = true;
         try { _operation.Cancel(); }
-        catch { /* ignore */ }
+        catch { /* 忽略 */ }
         State = DownloadState.Cancelled;
         RaiseCommandStates();
     }
@@ -159,7 +158,7 @@ public sealed partial class DownloadItemViewModel : ObservableObject
     private void Pause()
     {
         try { _operation.Pause(); _isPaused = true; State = DownloadState.Paused; }
-        catch { /* Pause isn't supported for all download kinds — ignore */ }
+        catch { /* 并非所有下载类型都支持 Pause —— 忽略 */ }
         RaiseCommandStates();
     }
 
@@ -167,7 +166,7 @@ public sealed partial class DownloadItemViewModel : ObservableObject
     private void Resume()
     {
         try { _operation.Resume(); _isPaused = false; State = DownloadState.InProgress; }
-        catch { /* ignore */ }
+        catch { /* 忽略 */ }
         RaiseCommandStates();
     }
 
@@ -175,14 +174,14 @@ public sealed partial class DownloadItemViewModel : ObservableObject
     private void Open()
     {
         try { Process.Start(new ProcessStartInfo(FullPath) { UseShellExecute = true }); }
-        catch { /* ignore */ }
+        catch { /* 忽略 */ }
     }
 
     [RelayCommand]
     private void Reveal()
     {
         try { Process.Start("explorer.exe", $"/select,\"{FullPath}\""); }
-        catch { /* ignore */ }
+        catch { /* 忽略 */ }
     }
 
     [RelayCommand]
