@@ -35,6 +35,13 @@ public sealed class WebViewTab
     public bool IsInitialized => _initialized;
     public bool IsSuspended { get; private set; }
 
+    /// <summary>
+    /// Raised when a page asks for a new window (<c>target="_blank"</c> / <c>window.open()</c>) with an
+    /// http(s) URL. The tab itself only cancels the bare-Edge popup; the lifecycle service decides what to
+    /// do (open a new app tab) so this class stays decoupled from the tab collection.
+    /// </summary>
+    public event EventHandler<string?>? NewTabRequested;
+
     public WebViewTab(TabViewModel vm, DownloadManagerService downloadManager, HistoryService history)
     {
         _vm = vm;
@@ -94,6 +101,7 @@ public sealed class WebViewTab
         Core.HistoryChanged += OnHistoryChanged;
         Core.DocumentTitleChanged += OnDocumentTitleChanged;
         Core.FaviconChanged += OnFaviconChanged;
+        Core.NewWindowRequested += OnNewWindowRequested;
 
         _downloadManager.Register(Core);
     }
@@ -109,6 +117,7 @@ public sealed class WebViewTab
         Core.HistoryChanged -= OnHistoryChanged;
         Core.DocumentTitleChanged -= OnDocumentTitleChanged;
         Core.FaviconChanged -= OnFaviconChanged;
+        Core.NewWindowRequested -= OnNewWindowRequested;
 
         _downloadManager.Unregister(Core);
     }
@@ -170,6 +179,19 @@ public sealed class WebViewTab
         catch
         {
             // No favicon available or decode failed — leave the default (null) icon.
+        }
+    }
+
+    // target="_blank" / window.open() would otherwise pop a bare Edge window with no app chrome.
+    // Intercept web URLs and let the lifecycle service open a proper app tab instead. Non-web schemes
+    // (mailto:, tel:, custom protocol) are left alone so the OS default handler runs.
+    private void OnNewWindowRequested(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
+    {
+        if (Uri.TryCreate(e.Uri, UriKind.Absolute, out var uri)
+            && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps))
+        {
+            e.Handled = true;
+            NewTabRequested?.Invoke(this, uri.AbsoluteUri);
         }
     }
 

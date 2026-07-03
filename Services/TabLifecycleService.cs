@@ -40,6 +40,7 @@ public sealed class TabLifecycleService
     public async Task<TabViewModel> OpenTabAsync(string? url = null)
     {
         var tab = new TabViewModel(_downloadManager, _history);
+        tab.WebView.NewTabRequested += OnNewTabRequested;
         Tabs.Add(tab);
         SetActive(tab);
 
@@ -51,6 +52,10 @@ public sealed class TabLifecycleService
 
         return tab;
     }
+
+    /// <summary>A page requested a new window (target="_blank"). Route it into a real app tab.</summary>
+    private void OnNewTabRequested(object? sender, string? url)
+        => _ = OpenTabAsync(url);
 
     /// <summary>Activates a tab and deactivates the rest.</summary>
     public void SetActive(TabViewModel? tab)
@@ -130,6 +135,7 @@ public sealed class TabLifecycleService
 
         Tabs.Remove(tab);
         CancelSuspendTimer(tab);
+        tab.WebView.NewTabRequested -= OnNewTabRequested;
 
         if (!_isShuttingDown)
         {
