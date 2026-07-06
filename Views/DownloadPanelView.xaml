@@ -43,7 +43,7 @@
                                         <RowDefinition Height="Auto" />
                                     </Grid.RowDefinitions>
 
-                                    <!-- Row 0: filename + status reason -->
+                                    <!-- 第 0 行：文件名 + 状态原因 -->
                                     <StackPanel Grid.Row="0" Orientation="Horizontal">
                                         <TextBlock Text="{Binding FileName}"
                                                    FontWeight="SemiBold"
@@ -58,7 +58,7 @@
                                                    TextTrimming="CharacterEllipsis" />
                                     </StackPanel>
 
-                                    <!-- Row 1: progress bar + speed -->
+                                    <!-- 第 1 行：进度条 + 速度 -->
                                     <DockPanel Grid.Row="1" Margin="0,6,0,0">
                                         <TextBlock DockPanel.Dock="Right"
                                                    Text="{Binding SpeedText}"
@@ -72,7 +72,7 @@
                                                      IsIndeterminate="{Binding IsIndeterminate}" />
                                     </DockPanel>
 
-                                    <!-- Row 2: actions -->
+                                    <!-- 第 2 行：操作按钮 -->
                                     <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,6,0,0">
                                         <ui:Button Appearance="Transparent"
                                                    Icon="{ui:SymbolIcon Pause24}"

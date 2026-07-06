@@ -8,7 +8,7 @@ using WebBrowser.WebView;
 
 namespace WebBrowser.ViewModels;
 
-/// <summary>View model for a single browser tab. Holds the <see cref="WebViewTab"/> that owns the WebView2 control.</summary>
+/// <summary>单个浏览器标签的 view model。持有拥有 WebView2 控件的 <see cref="WebViewTab"/>。</summary>
 public sealed partial class TabViewModel : ObservableObject
 {
     private readonly WebViewTab _webView;
@@ -32,7 +32,7 @@ public sealed partial class TabViewModel : ObservableObject
     public Task InitializeAsync(CoreWebView2Environment environment)
         => _webView.InitializeAsync(environment);
 
-    /// <summary>Navigate this tab to the given address-bar input (normalized via <see cref="UrlHelper"/>).</summary>
+    /// <summary>把本标签导航到给定的地址栏输入（经 <see cref="UrlHelper"/> 规范化）。</summary>
     public void Navigate(string? input) => _webView.Navigate(input);
 
     [RelayCommand] private void GoBack() => _webView.GoBack();

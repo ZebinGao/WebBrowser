@@ -3,9 +3,8 @@ using System.Windows.Controls;
 namespace WebBrowser.Views;
 
 /// <summary>
-/// History flyout content: a scrollable list of <see cref="WebBrowser.Models.HistoryEntry"/>
-/// (newest first) with per-row open/remove and a Clear-all action. Pure view — binds to
-/// <see cref="ViewModels.MainViewModel.History"/>.
+/// 历史浮层内容：<see cref="WebBrowser.Models.HistoryEntry"/> 的可滚动列表（最新的在最前），
+/// 每行带打开/移除，外加一个全部清除操作。纯 view —— 绑定到 <see cref="ViewModels.MainViewModel.History"/>。
 /// </summary>
 public partial class HistoryPanelView : UserControl
 {

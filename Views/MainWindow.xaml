@@ -35,14 +35,14 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <!-- Title bar hosts the tab strip on the left; system caption buttons render on the right. -->
+        <!-- 标题栏左侧承载标签条；系统字幕按钮渲染在右侧。 -->
         <ui:TitleBar x:Name="TitleBar" Grid.Row="0" Title="">
             <ui:TitleBar.Header>
                 <views:TabStripView />
             </ui:TitleBar.Header>
         </ui:TitleBar>
 
-        <!-- Toolbar: navigation buttons + address bar + downloads + process-count telemetry. -->
+        <!-- 工具栏：导航按钮 + 地址栏 + 下载 + 进程数遥测。 -->
         <Grid Grid.Row="1" Margin="10,4,10,8">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
@@ -86,7 +86,7 @@
                         Text="{Binding ActiveTab.Address, Mode=OneWay, TargetNullValue=''}"
                         KeyDown="AddressBox_KeyDown" />
 
-            <!-- Downloads button with an active-count badge overlay. -->
+            <!-- 下载按钮，带活动计数角标 overlay。 -->
             <Grid Grid.Column="4" Margin="6,0,2,0" HorizontalAlignment="Right">
                 <ui:Button x:Name="DownloadsButton"
                            Appearance="Transparent"
@@ -120,7 +120,7 @@
                 </Border>
             </Grid>
 
-            <!-- Bookmark this page: outline star when unbookmarked, filled star when bookmarked. -->
+            <!-- 收藏本页：未收藏时显空心星标，已收藏时显实心星标。 -->
             <Grid x:Name="BookmarkButton" Grid.Column="5" Margin="4,0,2,0">
                 <ui:Button Appearance="Transparent"
                            Focusable="False"
@@ -157,7 +157,7 @@
                 </ui:Button>
             </Grid>
 
-            <!-- History flyout toggle. -->
+            <!-- 历史浮层开关。 -->
             <ui:Button x:Name="HistoryButton"
                        Grid.Column="6"
                        Appearance="Transparent"
@@ -168,7 +168,7 @@
                        Command="{Binding ToggleHistoryCommand}"
                        Margin="2,0,2,0" />
 
-            <!-- Theme toggle: two overlaid buttons (moon when dark, sun when light); only one is visible. -->
+            <!-- 主题切换：两个叠加按钮（dark 时显月亮，light 时显太阳），只显示其中一个。 -->
             <Grid Grid.Column="7" Margin="4,0,2,0">
                 <ui:Button Appearance="Transparent"
                            Focusable="False"
@@ -205,7 +205,7 @@
                 </ui:Button>
             </Grid>
 
-            <!-- Debug telemetry: WebView2 process count + total working set (drops when background tabs suspend). -->
+            <!-- 调试遥测：WebView2 进程数 + 总 working set（后台标签挂起时下降）。 -->
             <StackPanel Grid.Column="8" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,2,0">
                 <TextBlock Text="{Binding WebViewProcessCount, StringFormat='wv2: {0}'}"
                            Opacity="0.5" FontSize="11" />
@@ -216,10 +216,9 @@
         </Grid>
 
         <!--
-            Tab content region. Every tab's WebView2 control is overlaid in a single Grid and kept
-            parented for its whole lifetime; only the active tab is visible. We deliberately do NOT
-            use a stock TabControl here — its content recycling would unparent/reparent the WebView2,
-            destroying its host HWND.
+            标签内容区。所有标签的 WebView2 控件 overlay 在同一个 Grid 里，全生命周期保持 parented，
+            仅活动标签可见。我们刻意不用 stock TabControl —— 它的内容回收会 unparent/reparent WebView2，
+            摧毁其宿主 HWND。
         -->
         <ItemsControl Grid.Row="2" ItemsSource="{Binding Tabs}" Focusable="False">
             <ItemsControl.ItemsPanel>
@@ -235,7 +234,7 @@
             </ItemsControl.ItemTemplate>
         </ItemsControl>
 
-        <!-- Downloads flyout, toggled by the toolbar button. -->
+        <!-- 下载浮层，由工具栏按钮切换。 -->
         <Popup IsOpen="{Binding IsDownloadsOpen}"
                PlacementTarget="{Binding ElementName=DownloadsButton}"
                Placement="Bottom"
@@ -246,7 +245,7 @@
             <views:DownloadPanelView />
         </Popup>
 
-        <!-- History flyout. -->
+        <!-- 历史浮层。 -->
         <Popup IsOpen="{Binding IsHistoryOpen}"
                PlacementTarget="{Binding ElementName=HistoryButton}"
                Placement="Bottom"
@@ -257,7 +256,7 @@
             <views:HistoryPanelView />
         </Popup>
 
-        <!-- Bookmarks flyout. -->
+        <!-- 书签浮层。 -->
         <Popup IsOpen="{Binding IsBookmarksOpen}"
                PlacementTarget="{Binding ElementName=BookmarkButton}"
                Placement="Bottom"

@@ -19,7 +19,7 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <!-- Header: title on the left, Clear all on the right -->
+            <!-- 头部：左侧标题，右侧 Clear all -->
             <Grid Grid.Row="0" Margin="14,10,14,6">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
@@ -102,7 +102,7 @@
                 </ItemsControl>
             </ScrollViewer>
 
-            <!-- Empty state -->
+            <!-- 空状态 -->
             <TextBlock Grid.Row="1"
                        Text="No history yet — pages you visit will show up here."
                        Opacity="0.5"

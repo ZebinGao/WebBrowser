@@ -1,8 +1,8 @@
 namespace WebBrowser.Models;
 
 /// <summary>
-/// One user-saved bookmark. Plain serializable POCO (no MVVM base) for clean JSON persistence.
-/// Flat list — no folders, by design. Hosted in <see cref="Services.BookmarksService.Items"/>.
+/// 一条用户保存的书签。纯粹的、可序列化的 POCO（无 MVVM 基类），以利干净的 JSON 持久化。
+/// 扁平列表 —— 不含文件夹，刻意如此。托管于 <see cref="Services.BookmarksService.Items"/>。
 /// </summary>
 public sealed class Bookmark
 {

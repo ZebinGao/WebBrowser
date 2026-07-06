@@ -8,9 +8,9 @@ using WebBrowser.Models;
 namespace WebBrowser.Services;
 
 /// <summary>
-/// Persists the user's bookmarks to <see cref="AppPaths.BookmarksPath"/> (JSON). Flat list — no folders,
-/// by design. Holds an in-memory <see cref="Items"/> collection the UI binds to; mutations are
-/// debounced to disk. The toolbar star button reads <see cref="ContainsUrl"/> to reflect state.
+/// 把用户书签持久化到 <see cref="AppPaths.BookmarksPath"/>（JSON）。扁平列表 —— 不含文件夹，刻意如此。
+/// 持有一个供 UI 绑定的内存 <see cref="Items"/> 集合；变更会去抖刷盘。工具栏的星标按钮通过
+/// <see cref="ContainsUrl"/> 来反映状态。
 /// </summary>
 public sealed class BookmarksService : IDisposable
 {
@@ -19,9 +19,9 @@ public sealed class BookmarksService : IDisposable
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true,
-        // NOTE: titles with CJK/emoji are stored as \uXXXX escapes because System.Text.Json's default
-        // encoder escapes non-ASCII. They deserialize back to the exact original text, so this is purely
-        // a file-readability cosmetic (UnsafeRelaxJsonEscaping isn't available in this runtime projection).
+        // 注意：含 CJK/emoji 的标题会以 \uXXXX 转义存储，因为 System.Text.Json 的默认 encoder
+        // 会转义非 ASCII 字符。反序列化时会还原成完全一致的原始文本，因此这只是文件可读性上的
+        // 外观问题（此运行时投影下 UnsafeRelaxJsonEscaping 不可用）。
     };
 
     private readonly DispatcherTimer _flushTimer;
@@ -42,10 +42,10 @@ public sealed class BookmarksService : IDisposable
         };
     }
 
-    /// <summary>True if a bookmark with the exact URL already exists (drives the star button state).</summary>
+    /// <summary>当已存在精确匹配 URL 的书签时为 true（驱动星标按钮状态）。</summary>
     public bool ContainsUrl(string? url) => url is not null && Items.Any(b => b.Url == url);
 
-    /// <summary>Adds a bookmark unless one with the same URL already exists.</summary>
+    /// <summary>添加书签，除非已存在相同 URL 的书签。</summary>
     public void Add(string url, string title)
     {
         if (string.IsNullOrWhiteSpace(url) || ContainsUrl(url))
@@ -66,7 +66,7 @@ public sealed class BookmarksService : IDisposable
             ScheduleFlush();
     }
 
-    /// <summary>Adds the URL if absent, removes it if present. Returns true if it is now bookmarked.</summary>
+    /// <summary>URL 不存在则添加，存在则移除。返回该 URL 当前是否已被收藏。</summary>
     public bool Toggle(string url, string title)
     {
         var existing = Items.FirstOrDefault(b => b.Url == url);
@@ -101,7 +101,7 @@ public sealed class BookmarksService : IDisposable
         }
         catch
         {
-            // Corrupt or unreadable file — start fresh.
+            // 文件损坏或不可读 —— 从空白开始。
         }
     }
 
@@ -120,7 +120,7 @@ public sealed class BookmarksService : IDisposable
         }
         catch
         {
-            // Best-effort persistence.
+            // 持久化是尽力而为。
         }
     }
 

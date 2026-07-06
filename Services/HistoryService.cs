@@ -8,14 +8,13 @@ using WebBrowser.Models;
 namespace WebBrowser.Services;
 
 /// <summary>
-/// Persists browsing history to <see cref="AppPaths.HistoryPath"/> (JSON). Holds an in-memory
-/// <see cref="Entries"/> collection (newest first) that the UI binds to; mutations are debounced to
-/// disk so rapid navigations don't thrash IO. Entries are deduped by URL (visit count + last-visited
-/// bump, moved to top) and capped at <see cref="MaxEntries"/>.
+/// 把浏览历史持久化到 <see cref="AppPaths.HistoryPath"/>（JSON）。持有一个供 UI 绑定的内存
+/// <see cref="Entries"/> 集合（最新的在最前）；变更会去抖刷盘，避免快速导航时频繁打 IO。
+/// 条目按 URL 去重（visit count + last-visited 上调，并移到最前），且限制在 <see cref="MaxEntries"/> 以内。
 /// </summary>
 public sealed class HistoryService : IDisposable
 {
-    /// <summary>Hard cap so history.json never grows unbounded.</summary>
+    /// <summary>硬性上限，使 history.json 不会无限增长。</summary>
     private const int MaxEntries = 1000;
 
     private static readonly TimeSpan FlushDelay = TimeSpan.FromSeconds(1);
@@ -23,9 +22,9 @@ public sealed class HistoryService : IDisposable
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         WriteIndented = true,
-        // NOTE: titles with CJK/emoji are stored as \uXXXX escapes because System.Text.Json's default
-        // encoder escapes non-ASCII. They deserialize back to the exact original text, so this is purely
-        // a file-readability cosmetic (UnsafeRelaxJsonEscaping isn't available in this runtime projection).
+        // 注意：含 CJK/emoji 的标题会以 \uXXXX 转义存储，因为 System.Text.Json 的默认 encoder
+        // 会转义非 ASCII 字符。反序列化时会还原成完全一致的原始文本，因此这只是文件可读性上的
+        // 外观问题（此运行时投影下 UnsafeRelaxJsonEscaping 不可用）。
     };
 
     private readonly DispatcherTimer _flushTimer;
@@ -38,7 +37,7 @@ public sealed class HistoryService : IDisposable
     {
         Load();
 
-        // Debounce: reset the timer on every mutation, flush once navigation settles.
+        // 去抖：每次变更都重置计时器，待导航平息后刷一次盘。
         _flushTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = FlushDelay };
         _flushTimer.Tick += (_, _) =>
         {
@@ -47,7 +46,7 @@ public sealed class HistoryService : IDisposable
         };
     }
 
-    /// <summary>Records a successful navigation. A repeat URL bumps VisitCount and moves the entry to the top.</summary>
+    /// <summary>记录一次成功的导航。重复的 URL 会增加 VisitCount 并把该条目移到最前。</summary>
     public void Record(string url, string title)
     {
         if (string.IsNullOrWhiteSpace(url))
@@ -121,11 +120,11 @@ public sealed class HistoryService : IDisposable
         }
         catch
         {
-            // Corrupt or unreadable file — start fresh rather than crash on startup.
+            // 文件损坏或不可读 —— 从空白开始，避免启动时崩溃。
         }
     }
 
-    /// <summary>Writes the collection to disk atomically (temp file, then replace/move).</summary>
+    /// <summary>把集合原子地写入磁盘（临时文件，再 replace/move）。</summary>
     private void Flush()
     {
         try
@@ -141,7 +140,7 @@ public sealed class HistoryService : IDisposable
         }
         catch
         {
-            // Persistence is best-effort; never crash the browser over a history write.
+            // 持久化是尽力而为；绝不因写历史而让浏览器崩溃。
         }
     }
 
